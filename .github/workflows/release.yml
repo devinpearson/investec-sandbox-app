@@ -116,7 +116,14 @@ jobs:
         run: npm run build -- --clean
 
       - name: Package
-        run: npx electron-builder --${{ matrix.os }} --${{ matrix.arch }} --config electron-builder.config.cjs --publish never
+        run: |
+          # A secret that isn't set arrives as an empty variable, and
+          # electron-builder takes an empty CSC_LINK for a certificate at the
+          # project folder. Without one, it's left out (Mac builds sign ad hoc).
+          for name in CSC_LINK CSC_KEY_PASSWORD WIN_CSC_LINK WIN_CSC_KEY_PASSWORD APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID; do
+            [ -n "${!name}" ] || unset "$name"
+          done
+          npx electron-builder --${{ matrix.os }} --${{ matrix.arch }} --config electron-builder.config.cjs --publish never
 
       - name: Check the app runs its services
         run: |
