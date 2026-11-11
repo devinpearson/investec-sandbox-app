@@ -108,7 +108,7 @@ jobs:
             services="release/win-unpacked/resources/services"
             node="$services/node/node.exe"
           else
-            services="release/mac$([ '${{ matrix.arch }}' = arm64 ] && echo -arm64)/Investec Sandbox.app/Contents/Resources/services"
+            services="release/mac${{ matrix.arch == 'arm64' && '-arm64' || '' }}/Investec Sandbox.app/Contents/Resources/services"
             node="$services/node/bin/node"
           fi
           node="$(cd "$(dirname "$node")" && pwd)/$(basename "$node")"
