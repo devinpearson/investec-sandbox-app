@@ -84,6 +84,22 @@ jobs:
             packages/*/package-lock.json
             packages/sim/web/package-lock.json
 
+      # The packages' installs and the pinned Node.js, kept warm on main by
+      # warm-cache.yml (a release runs on its tag, which can only read main's
+      # caches). Only a package whose lockfile changed is installed again; on
+      # the Intel Mac that saves compiling isolated-vm (about 2.5 minutes).
+      - name: Restore the packages' installs
+        uses: actions/cache@v6
+        with:
+          path: |
+            vendor/node
+            packages/sim/node_modules
+            packages/sim/web/node_modules
+            packages/blockly/node_modules
+            packages/card-server/node_modules
+          key: packages-${{ matrix.os }}-${{ matrix.arch }}-${{ hashFiles('config.js', 'packages/sim/package-lock.json', 'packages/sim/web/package-lock.json', 'packages/blockly/package-lock.json', 'packages/card-server/package-lock.json') }}
+          restore-keys: packages-${{ matrix.os }}-${{ matrix.arch }}-
+
       - name: Set the version from the release tag
         if: github.event_name == 'release'
         run: |

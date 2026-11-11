@@ -24,6 +24,11 @@ Publishing a release on GitHub runs [.github/workflows/release.yml](.github/work
 
 To build without a release, run the workflow from **Actions → Release → Run workflow**. The files are then kept as workflow artifacts for 14 days.
 
+### The install cache
+The builds restore each package's `node_modules` and the pinned Node.js from a cache, so a package is only installed again when its lockfile changes. This matters most on the Intel Mac, where isolated-vm has no prebuilt binary and takes about 2.5 minutes to compile.
+
+A release runs on its tag, and a tag's run can only reuse caches saved on `main`. [warm-cache.yml](.github/workflows/warm-cache.yml) keeps those caches up to date. It installs the packages on each runner whenever a lockfile changes on `main`, and every five days so GitHub doesn't evict them after 7 days unused. Its cache key and paths must match `release.yml`'s. Before a release, run **Actions → Warm the build cache → Run workflow** if it hasn't run recently.
+
 ### Signing
 Each platform is signed when the repository has its secrets (**Settings → Secrets and variables → Actions**):
 

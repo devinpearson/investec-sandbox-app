@@ -49,14 +49,23 @@ export async function ensureNode() {
   remove(tmp)
 }
 
-// npm ci when node_modules is missing or older than the lockfile.
+// npm ci when node_modules wasn't installed from this lockfile with this
+// Node.js. It's the lockfile's content that counts, not its date: a fresh
+// checkout or a restored CI cache gives the files new dates.
+const INSTALLED = '.sandbox-installed'
 function install(dir) {
   const lock = path.join(dir, 'package-lock.json')
-  const marker = path.join(dir, 'node_modules', '.package-lock.json')
-  const current = fs.existsSync(marker) && fs.statSync(marker).mtimeMs >= fs.statSync(lock).mtimeMs
-  if (current && !process.env.SANDBOX_REINSTALL) return
-  step(`Installing ${path.relative(ROOT, dir)}`)
-  npm(['ci', '--no-audit', '--no-fund'], { cwd: dir })
+  const marker = path.join(dir, 'node_modules', INSTALLED)
+  const wanted = createHash('sha256').update(NODE_VERSION).update(fs.readFileSync(lock)).digest('hex')
+  let current = fs.existsSync(marker) && fs.readFileSync(marker, 'utf8').trim() === wanted
+  // Installs from before the marker: trust them if they're newer than the lockfile.
+  const npmMarker = path.join(dir, 'node_modules', '.package-lock.json')
+  if (!fs.existsSync(marker) && fs.existsSync(npmMarker) && fs.statSync(npmMarker).mtimeMs >= fs.statSync(lock).mtimeMs) current = true
+  if (!current || process.env.SANDBOX_REINSTALL) {
+    step(`Installing ${path.relative(ROOT, dir)}`)
+    npm(['ci', '--no-audit', '--no-fund'], { cwd: dir })
+  }
+  fs.writeFileSync(marker, `${wanted}\n`)
 }
 
 // `prisma db seed` runs the sim's seed command (tsx) through a shell.

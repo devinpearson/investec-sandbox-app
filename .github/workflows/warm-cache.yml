@@ -1,0 +1,86 @@
+# Keeps the release builds' install cache warm. A release runs on its tag,
+# and a tag's run can only reuse caches saved on the default branch, so this
+# installs the packages on main, on each runner, whenever a lockfile changes,
+# and every few days so GitHub doesn't evict the caches (it drops ones unused
+# for 7 days). The cache key and paths must match release.yml's.
+
+name: Warm the build cache
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - config.js
+      - scripts/setup.mjs
+      - scripts/lib.mjs
+      - packages/sim/package-lock.json
+      - packages/sim/web/package-lock.json
+      - packages/blockly/package-lock.json
+      - packages/card-server/package-lock.json
+      - .github/workflows/warm-cache.yml
+  schedule:
+    - cron: '17 3 */5 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: warm-cache
+  cancel-in-progress: true
+
+jobs:
+  install:
+    name: Install (${{ matrix.os }} ${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: mac
+            arch: arm64
+            runner: macos-15
+          - os: mac
+            arch: x64
+            runner: macos-15-intel
+          - os: win
+            arch: x64
+            runner: windows-2022
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Allow long paths
+        if: matrix.os == 'win'
+        run: git config --system core.longpaths true
+
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            packages/*/package-lock.json
+            packages/sim/web/package-lock.json
+
+      - name: Restore the packages' installs
+        id: cache
+        uses: actions/cache@v6
+        with:
+          path: |
+            vendor/node
+            packages/sim/node_modules
+            packages/sim/web/node_modules
+            packages/blockly/node_modules
+            packages/card-server/node_modules
+          key: packages-${{ matrix.os }}-${{ matrix.arch }}-${{ hashFiles('config.js', 'packages/sim/package-lock.json', 'packages/sim/web/package-lock.json', 'packages/blockly/package-lock.json', 'packages/card-server/package-lock.json') }}
+          restore-keys: packages-${{ matrix.os }}-${{ matrix.arch }}-
+
+      # Just the packages (setup.mjs needs nothing from the root install).
+      # On an exact hit there's nothing to do, and restoring kept it in use.
+      - name: Install the packages
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: node scripts/setup.mjs
