@@ -1,140 +1,103 @@
 # Investec Sandbox
 
-A desktop app for the Investec programmable banking sandbox. It brings five services together in one window:
+A local copy of Investec's programmable banking APIs that you can run on your Mac or Windows PC. Build and test against realistic accounts, transactions, cards and payments without touching a real bank account, and write card code with a visual or code editor.
 
-| Service | Usual port | Source |
-|---|---|---|
-| API (Express + Prisma, SQLite) | 3000 | `packages/sim/` |
-| Dashboard, OAuth tester and quick start (Next.js, served as static files) | 3001 | `packages/sim/web/` |
-| Card code editors (Blockly, and Monaco at `/code.html`; Vite) | 3002 | `packages/blockly/` |
-| Card server, which runs the editor's code (`isolated-vm`) | 3010 | `packages/card-server/` |
-| MCP server: AI assistants create, edit, run and open card code; the editors' card code library | 3020 | `packages/blockly/mcp/` |
+Everything runs on your computer. There's nothing to sign up for and nothing else to install.
 
-All the code lives here (see [packages/README.md](packages/README.md) for where each package came from). The built app is self-contained: it ships its own Node.js and every service, and doesn't need any other checkout, a system Node, or anything else running.
+> A community project. It is not made, endorsed or supported by Investec.
 
-## Setup
-You need Node.js 20 or newer to run npm and the build scripts, and Xcode's command line tools (`xcode-select --install`) to compile `isolated-vm`.
+## Download
+Get the latest version from the [Releases page](https://github.com/devinpearson/investec-sandbox-app/releases/latest):
 
-```bash
-npm install
-```
-
-Besides Electron, this downloads Node.js 22.16.0 into `vendor/node` (the version the services run on, pinned in [config.js](config.js), checksum-verified), installs each package's dependencies with it, and creates the development database. Run it again after pulling changes to a package's lockfile.
-
-## Develop
-```bash
-npm run dev
-```
-
-Runs the app straight from `packages/` with live reload: the API under `tsx watch`, the dashboard under `next dev`, the editor under Vite, and the card server under `tsc --watch` + `node --watch`. Edit a package and the change shows up in the app. The development data is in `packages/sim/prisma/dev.db`.
-
-Each package still has its own scripts, e.g. `npm --prefix packages/sim test` or `npm --prefix packages/sim/web run test:unit`.
-
-## Build
-```bash
-npm run build
-```
-
-Builds every package into `build/`. The parts build side by side, and a part whose files haven't changed since the last build is kept, so a rebuild with no changes takes a couple of seconds and a clean build about 35. `npm run build:clean` rebuilds everything.
-
-| | |
+| Your computer | Download |
 |---|---|
-| `build/node/` | Node.js 22.16.0, without its debug symbols |
-| `build/sim/` | The compiled API, its production dependencies, the Prisma migrations and `template.db`, a database with the starter data |
-| `build/web/` | The dashboard's static files (a Next.js static export), served by the app |
-| `build/blockly/` | The editor's static files |
-| `build/card-server/` | The compiled card server and its production dependencies |
+| Mac with Apple silicon (M1 or newer) | `Investec-Sandbox-<version>-arm64.dmg` |
+| Mac with an Intel processor | `Investec-Sandbox-<version>-x64.dmg` |
+| Windows 10 or 11 (64-bit) | `Investec-Sandbox-Setup-<version>-x64.exe` |
 
-Production dependencies are installed without dev or peer dependencies, then pruned of what never runs: TypeScript and type packages, docs, source maps, tests, Prisma's WebAssembly engines and isolated-vm's prebuilt binaries for other platforms.
+Not sure which Mac you have? Choose **Apple menu → About This Mac**. Apple silicon Macs show **Chip: Apple M…**, and Intel Macs show **Processor: … Intel**.
 
-```bash
-npm start
-```
+You need macOS 12 (Monterey) or later, or Windows 10 or later.
 
-Runs the app on `build/`, the way the installed app runs.
+## Install
+**Mac:**
+1. Open the `.dmg` and drag **Investec Sandbox** to **Applications**.
+2. Open it from Applications. If macOS says it can't check the app for malicious software, right-click the app, choose **Open**, then **Open** again. On recent macOS versions, open it once, then go to **System Settings → Privacy & Security** and choose **Open Anyway**. You only need to do this the first time.
 
-## Make the Mac app
-```bash
-npm run dist
-```
+**Windows:**
+1. Run the installer. If Windows SmartScreen says it protected your PC, choose **More info → Run anyway**.
+2. Pick where to install it. It installs for your user only, so it doesn't need admin rights.
+3. Open **Investec Sandbox** from the Start menu.
 
-Builds everything, then writes `release/Investec-Sandbox-<version>-<arch>.dmg` (about 180 MB, LZFSE-compressed) and `release/mac/Investec Sandbox.app` (about 440 MB, most of it Electron and Node). Packaging takes about 20 seconds. Open the `.dmg` and drag the app to Applications. `npm run pack` builds just the `.app`, and `npm run release` also makes the `.zip` and block map that auto-update uses. Electron's language packs are left out except English. The packaging settings are in [electron-builder.config.cjs](electron-builder.config.cjs).
+## Getting started
+The first time it opens, the app shows a welcome sheet with your sandbox's API address, client ID, client secret and API key, each with a Copy button. Use these wherever your code or Postman would use Investec's:
 
-It's built for the Mac's own processor: Node.js and the native modules are installed for it, so build on Apple silicon for an arm64 app.
+- **API address:** `http://localhost:3000`, unless that port was taken (the app picks the next free one and shows you).
+- **Postman:** the welcome sheet links to the Investec Postman collection. Point its base URL at the sandbox's address.
+- **Quick start** (in the sidebar, under Develop) walks you through your first three calls: get a token, list the accounts, list an account's transactions. It shows each in curl, Node.js, Python and C#, with your sandbox's details filled in. Each step is ticked once that call arrives from your own code.
 
-**Signing, notarisation and updates** turn on when their credentials are in the environment; without them the build is unsigned (a copy you build yourself opens normally; on another Mac, right-click it and choose **Open** the first time).
-- Signing: `CSC_LINK` and `CSC_KEY_PASSWORD` (or `CSC_NAME`) for a Developer ID Application certificate. The hardened runtime's exceptions are in `assets/entitlements.mac.plist`.
-- Notarisation: `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD` and `APPLE_TEAM_ID` (or an App Store Connect API key).
-- Updates: set `SANDBOX_GITHUB_REPO=owner/repo` and run `npm run release` to publish to that repository's GitHub Releases. Signed copies built that way check for updates on launch and from **Investec Sandbox → Check for Updates…**.
+The sandbox comes loaded with starter data: a profile, accounts, cards and a history of transactions. **Data & scenarios** loads other setups, or resets everything.
 
-### Releases on GitHub
-Publishing a release on GitHub runs [.github/workflows/release.yml](.github/workflows/release.yml). It builds the Mac app on an Apple silicon and an Intel runner and the Windows installer on a Windows (x64) runner. It attaches both `.dmg` files to the release, plus the `.zip` files, block maps and a combined `latest-mac.yml` for auto-update. It also attaches `Investec-Sandbox-Setup-<version>-x64.exe` with its block map and `latest.yml`. The release's tag sets the version: `v1.2.0` makes 1.2.0. To build without a release, run the workflow from the Actions tab; the files are kept as workflow artifacts for 14 days.
+## What you can do
+**Banking:** see and change the sandbox's data as your code would.
+- **Accounts:** balances, top-ups and transfers between accounts.
+- **Transactions:** filter by account, date and type.
+- **Cards:** issue cards and swipe them at a point of sale, including pending holds and foreign currency. Foreign swipes are charged at the European Central Bank's reference rates, refreshed every six hours.
+- **Beneficiaries:** add beneficiaries and pay them.
 
-Mac builds are signed and notarised when the repository has the secrets `CSC_LINK` (the certificate as base64), `CSC_KEY_PASSWORD`, `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD` and `APPLE_TEAM_ID`. Without them they're unsigned and don't update themselves. The Windows installer is signed when `WIN_CSC_LINK` (a `.pfx` as base64) and `WIN_CSC_KEY_PASSWORD` are set. Unsigned, it installs per user without admin rights, but SmartScreen warns first.
+**Simulate:** test the cases that are hard to make happen on a real account.
+- **Clock & schedules:** move the sandbox's date forward and run recurring transactions, like debit orders and salaries.
+- **Faults:** make the API return random errors, time out or slow down, to test how your app copes. Only outside clients see them, such as your own app or Postman; the app's own screens keep working. The app shows when faults are on.
 
-The build scripts run on macOS, Linux and Windows. On Windows, `npm ci` and `npm run build` work as they do on a Mac. The `npm run dev` shortcut is POSIX-only; on Windows, set `SANDBOX_MODE=dev` yourself and run `npx electron .`.
+**Develop:**
+- **Card blocks:** build card code by snapping blocks together, then run it against a test transaction to see whether it approves or declines.
+- **Card code:** write card code as JavaScript (`main.js` with its `env.json`) in a full code editor, with suggestions and error checking.
+- **API reference:** every endpoint, with its parameters and what it returns, and the request in cURL, Node.js or Python. **Try it** sends a request from the app and shows the response.
+- **Requests:** every call the sandbox received from your code, with headers, bodies, status and timing. Send one again, or copy it as a curl command.
+- **OAuth tester:** try the sign-in and consent flow that apps use to access a user's accounts.
 
-### The app's data
-The installed app (and `npm start`) keeps the sandbox's data in `~/Library/Application Support/Investec Sandbox/sandbox.db`, created from the starter data on first launch. When a new version adds Prisma migrations, the app applies them on launch, after copying the database to `sandbox.db.backup`. **Services → Show Sandbox Data in Finder** opens the folder. To move data between the app and another copy of the sandbox, use **Export** and **Import** on the dashboard.
+**Sandbox:**
+- **Data & scenarios:** load a scenario, reset to the starter data, clear everything, or export and import the sandbox's data.
+- **Settings:** open at login, the menu bar icon, and the ports the app uses.
+- **Logs:** what each part of the app is doing, if something goes wrong.
 
-Card code projects live in the `card-code/` folder beside it: one folder per project with `main.js`, `env.json`, `card-code.json` and, for blocks projects, `workspace.json`. Deleted projects move to `card-code/.trash/`. **Services → Show Card Code Library in Finder** opens it.
+Press **⌘K** (Mac) or **Ctrl+K** (Windows) to open the command palette: jump to any section or run any action from there.
 
-The same folder holds `preferences.json` (Settings) and `window-state.json` (window size, sidebar width, last section and scroll positions).
+## Card code and AI assistants
+Card code you save goes into a library, so you can come back to it in either editor. A saved project saves as you type.
 
-## Using the app
-- **Launch:** a splash with the zebra shows each service starting, for at least 5 seconds, and the window appears once the section it opens on is ready, including the API for the dashboard's pages (or can say what went wrong).
-- **Overview:** the page the app opens on. The API's address and credentials (with Copy buttons), how many profiles, accounts, cards and transactions the sandbox holds, each service's status and address, the sandbox date and fault injection, and shortcuts to common first steps.
-- **Sidebar**, in groups you can fold away (click a group's name):
-  - **Banking:** Accounts (top-ups, transfers), Transactions, Cards (swipes, pending holds), Beneficiaries (payments)
-  - **Simulate:** Clock & schedules, Faults
-  - **Develop:** Quick start, Card blocks (the Blockly editor), Card code (a Monaco editor for `main.js` and `env.json`), API reference, Requests, OAuth tester
-  - **Sandbox:** Data & scenarios (load a scenario, reset, clear, export, import), Settings, Logs
-  - **Resources:** links that open in your browser (folded by default)
+You can also let an AI assistant, such as Claude, write card code for you. Choose **Services → Connect an AI Assistant…**. It gives you the command for Claude Code, a configuration for Claude Desktop and other apps, and the server's address (`http://127.0.0.1:3020/mcp`). Your assistant can then do the following, as blocks or JavaScript:
+- create, edit, rename and delete card code
+- run it against test transactions
+- open it in the app for you to see
 
-  ⌘1–⌘9 go to the first nine; the **Go** menu lists them all. Arrow keys move through the sidebar, Left and Right fold groups, and typing jumps to a section. Drag its edge to resize it (double-click to reset); ⌃⌘S hides it.
-- **Toolbar:** the section's name and what it's for, its actions (e.g. **Swipe** and **Add Card** on Cards, **Transfer** on Accounts), the services indicator and the command palette.
-- **Sheets:** a toolbar action opens its form as a sheet, which closes once the action succeeds. Clearing data, importing and deleting confirm in a native sheet; exports save through a native Save panel.
-- **Command palette (⌘K):** go to any section, run any page action, load a scenario, reset, import or export the sandbox, restart services.
-- **Services indicator:** "All services running", or what's wrong (and whether faults are on or the clock is moved). Click it for each service's restart, address, source folder and logs. The **Services** menu has the same, plus Restart All (⇧⌘R). While a service starts, its sections show progress and its latest log lines; if one fails or stops, they say why and offer a restart, and you get a notification.
-- **File menu:** Import Sandbox… (⌘O), Export Sandbox… (⇧⌘E), Load Scenario, Reset and Clear Sandbox Data.
-- **Card Code menu:** acts on the editor in front (or the last one used): Run (⌘↵), Save As… (⇧⌘S), Import…, Export…, Blocks (⌘B, blocks only) and Panel (⌘J). In Card code, Export saves the open file and Import takes a `.js` (main.js) or `.json` (env.json) file.
-- **Card code library:** Save As… in either editor saves a project to the library, and the Open menu lists the projects (Card code can also copy a blocks project's generated code). A project open in an editor saves as you edit, and changes made to it elsewhere, by an AI assistant or in the files, appear in the editor.
-- **AI assistants (MCP):** **Services → Connect an AI Assistant…** gives the Claude Code command, a configuration for Claude Desktop and other apps, and the server's address (`http://127.0.0.1:3020/mcp`). Assistants get tools to list, read, create (from scratch, an example or another project), update, edit, rename, delete, run and open card code, as blocks or JavaScript, plus the block reference and snippet tools. `open_card_code` switches the app to the project; if the editor has unsaved blocks or code, it asks before replacing them. The server only answers on this Mac, and only the app's editors can call it from a web page.
-- **API reference:** one long page laid out like Stripe's docs. A nav follows your scroll. Each endpoint has its parameters, body and returned attributes on the left, and on the right a request in cURL, Node.js or Python with an example response. **Try it** fills in the request and sends it (⌘↵), and the live response replaces the example. Its requests skip the sandbox's random faults unless you tick **Apply sandbox faults**. **Help → Swagger UI** opens Swagger in its own window (dark when the Mac is).
-- **Faults** (Simulate) are for testing outside clients, such as your own app or Postman: they get the random errors, timeouts and latency, while the app's own screens are exempt and keep working. The toolbar, menu bar icon and Dock badge show while faults are on.
-- **Quick start:** the first three calls (a token, the accounts, an account's transactions) in curl, Node.js, Python and C#, with the sandbox's address and credentials filled in. Secrets show as dots; **Copy** puts the real values in (and, for curl, a fresh token). **Run Here** makes the call from the app, and each step is ticked once that call arrives from your own code.
-- **Requests:** every call the API received, newest first, with both sets of headers, both bodies, the status and the time taken. **Send Again** replays one and **Copy as curl** reproduces it in a terminal. The app's own requests are hidden unless you ask for them. The API's address is served by a pass-through recorder in the app ([recorder.js](recorder.js)) that hands each request to the API unchanged on a private port, so the API itself is not modified. The last 300 requests are kept, in memory only.
-- **Logs:** every service's output, including each API request with its status coloured; filter by service or text, Pause, Clear, Copy and Export….
-- **Settings (⌘,):** open at login, the menu bar icon, the port of each service (type the ports, then **Restart Services**; **Use Defaults** puts the usual ones back), and the data folder.
-- **Menu bar icon:** service status and quick actions, also while the window is closed. The Dock icon shows a badge while faults are on or the sandbox clock is moved.
-- **Welcome sheet** on first launch: the API address and credentials with Copy buttons, the Postman collection, and a first card swipe. **Help → Welcome to Investec Sandbox** shows it again.
-- Foreign card swipes are charged at the European Central Bank's reference rates, fetched from [Frankfurter](https://frankfurter.dev) when the app starts and every six hours (offline, the last ones fetched are used). Only the currencies Frankfurter publishes can be swiped in.
-- The pages use the Mac's accent colour and text sizes, follow light and dark mode, and remember the Transactions page's account and filters and each section's scroll position.
-- On macOS, closing the window keeps the app and its services running; ⌘Q quits and stops them all.
+If an editor has unsaved changes, the app asks before an assistant replaces them. Changes an assistant makes show up in the editor straight away.
 
-Each service uses its preferred port, or the next free one if another program has it (the log says so). The dashboard and editor learn the addresses at runtime from `/sandbox-config.js`, which the app serves; Postman and your own apps should use the API address shown in the welcome sheet or **Services → Copy API URL**.
+The assistant connection only works from your own computer.
 
-## Files
-| | |
-|---|---|
-| `main.js` | Window, section views, service state, menus, sandbox commands |
-| `services.js` | How and where each service runs, ports, the database, the static file server |
-| `prefs.js` | The app's Settings |
-| `windows.js`, `ui/`, `aux-preload.js` | The launch splash, Settings, the welcome sheet, the command palette and Swagger UI |
-| `tray.js` | The menu bar icon |
-| `recorder.js` | The pass-through proxy in front of the API that records requests for the Requests section |
-| `guide.js` | Quick start's steps and code samples |
-| `shell-dev.js` | The Requests and Quick start pages |
-| `config.js` | The pinned Node.js version and the default ports |
-| `shell.html`, `shell.css`, `shell.js`, `shell-preload.js` | The sidebar, toolbar, status screens, Overview and Logs |
-| `shell-api.js` | The API reference (explorer) |
-| `page-preload.js` | `window.sandboxApp` for the pages: native sheets, Save panels, notifications, toolbar actions |
-| `electron-builder.config.cjs`, `assets/entitlements.mac.plist` | Packaging, signing and updates |
-| `docs/ux-plan.md` | The UX plan these features came from |
-| `scripts/setup.mjs`, `scripts/build.mjs` | `npm install`'s setup and `npm run build` |
-| `packages/` | The sandbox, the card code editor and the card server |
-| `assets/` | App icon |
+## Your data
+Everything stays on your computer:
+- **Mac:** `~/Library/Application Support/Investec Sandbox/`. **Services → Show Sandbox Data in Finder** opens it.
+- **Windows:** `%APPDATA%\Investec Sandbox\`
 
-For screenshots while developing, `SANDBOX_SNAPSHOT=<folder>` saves the shell and the active page as PNGs every few seconds, and `SANDBOX_SPLASH_MS=<ms>` changes how long the launch splash stays up at least (`0` to skip it).
+The folder holds the sandbox's database (`sandbox.db`), your card code library (`card-code/`, one folder per project) and your settings. Deleted card code projects go to `card-code/.trash/`, in case you want them back.
 
-Run with `npm run dev` or `npm start`, macOS shows the app as "Electron" in the menu bar and Dock; the built app shows "Investec Sandbox".
+When an update changes how data is stored, the app backs up your database as `sandbox.db.backup` first.
+
+## Updates
+Builds that support it check for new versions when they start. On a Mac, you can also choose **Investec Sandbox → Check for Updates…**. Unsigned Mac builds can't update themselves; download the new version from the [Releases page](https://github.com/devinpearson/investec-sandbox-app/releases) instead. Your data stays where it is.
+
+## Troubleshooting
+- **A service won't start, or a page says it's unavailable:** click the services indicator in the toolbar to restart that service and see its logs. **Services → Restart All** (⇧⌘R) restarts everything.
+- **Your code can't reach the API:** check the address in the welcome sheet, or use **Services → Copy API URL**. If another program had port 3000 when the app started, the sandbox uses the next free port.
+- **Your code gets errors that the app doesn't:** check whether **Faults** are on. The toolbar shows it.
+- **Start again with fresh data:** **Data & scenarios → Reset** brings back the starter data.
+
+On a Mac, closing the window keeps the sandbox running so your code can still reach it; quit the app (⌘Q) to stop it.
+
+## Uninstall
+- **Mac:** drag **Investec Sandbox** from Applications to the Bin. To remove your data too, delete `~/Library/Application Support/Investec Sandbox/`.
+- **Windows:** uninstall it from **Settings → Apps**. To remove your data too, delete `%APPDATA%\Investec Sandbox\`.
+
+## Contributing
+Want to build the app yourself or help improve it? See [CONTRIBUTING.md](CONTRIBUTING.md). [RELEASING.md](RELEASING.md) covers packaging and publishing releases.
