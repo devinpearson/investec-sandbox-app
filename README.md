@@ -105,3 +105,6 @@ On a Mac, closing the window keeps the sandbox running so your code can still re
 
 ## Contributing
 Want to build the app yourself or help improve it? See [CONTRIBUTING.md](CONTRIBUTING.md). [RELEASING.md](RELEASING.md) covers packaging and publishing releases.
+
+## Licence
+Investec Sandbox is released under the [MIT License](LICENSE).
