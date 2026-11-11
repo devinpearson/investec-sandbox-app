@@ -1,6 +1,7 @@
 // Builds every package into build/, which the app runs and packaging ships:
 //
-//   build/node/bin/node    the pinned Node.js the services run on (stripped)
+//   build/node/bin/node    the pinned Node.js the services run on (stripped;
+//                          build/node/node.exe on Windows)
 //   build/sim/             the API: compiled JS, production node_modules,
 //                          Prisma migrations and a seeded template.db
 //   build/web/             the dashboard's static files
@@ -18,7 +19,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { setup, seedPath } from './setup.mjs'
 import {
-  API_URL, BLOCKLY, BUILD, CARD, CARD_URL, NODE, NODE_VERSION, PORTS, ROOT, SIM, WEB, copy, npmAsync, remove, run, runAsync, step, toolAsync,
+  API_URL, BLOCKLY, BUILD, CARD, CARD_URL, NODE, NODE_HOME, NODE_VERSION, PORTS, ROOT, SIM, WEB, WINDOWS, copy, nodeBin, npmAsync, remove, run, runAsync, step, toolAsync,
 } from './lib.mjs'
 
 const PRISMA = 'prisma/build/index.js'
@@ -152,7 +153,8 @@ const buildApi = () =>
       const saved = prune(path.join(out, 'node_modules'), ['typescript', '@types', '@prisma/client/runtime/*.wasm', '.prisma/client/deno'])
       console.log(`[api] pruned ${saved} MB`)
       // A seeded starter database, for a sandbox's first run.
-      const env = { DATABASE_URL: `file:${path.join(out, 'template.db')}`, PATH: seedPath(), REFERENCE_RATES: 'off' }
+      // Forward slashes: Prisma reads the URL the same way on Windows.
+      const env = { DATABASE_URL: `file:${path.join(out, 'template.db').replaceAll('\\', '/')}`, PATH: seedPath(), REFERENCE_RATES: 'off' }
       await toolAsync('api', SIM, PRISMA, ['migrate', 'deploy'], { env })
       await toolAsync('api', SIM, PRISMA, ['db', 'seed'], { env })
     },
@@ -212,13 +214,21 @@ const buildCardServer = () =>
       const out = path.join(BUILD, 'card-server')
       fs.mkdirSync(out, { recursive: true })
       copy(path.join(CARD, 'dist'), path.join(out, 'dist'), src => !/\.test\.js(\.map)?$/.test(src))
-      // isolated-vm is a native addon, compiled during the development install.
-      await productionModules('card', CARD, out, { copyFromDev: ['isolated-vm/build/Release/isolated_vm.node'] })
-      // Its loader prefers that compiled addon: the prebuilt ones for other
-      // platforms, its sources and the copy of its own package aren't needed.
+      // isolated-vm is a native addon: compiled during the development
+      // install, or, where the package ships one (Windows x64, Apple
+      // silicon), its prebuilt addon is used instead.
       const ivm = 'isolated-vm'
+      const compiled = fs.existsSync(path.join(CARD, 'node_modules', ivm, 'build', 'Release', 'isolated_vm.node'))
+      await productionModules('card', CARD, out, { copyFromDev: ['isolated-vm/build/Release/isolated_vm.node'] })
+      // Its loader prefers a compiled addon. Prebuilt ones for other
+      // platforms, its sources and the copy of its own package aren't needed.
+      const prebuilds = path.join(out, 'node_modules', ivm, 'prebuilds')
+      const keep = compiled ? null : `${process.platform}-${process.arch}`
+      if (!compiled && !fs.existsSync(path.join(prebuilds, keep))) throw new Error(`isolated-vm has neither a compiled addon nor a prebuilt one for ${keep}`)
+      const otherPrebuilds = fs.existsSync(prebuilds) ? fs.readdirSync(prebuilds).filter(name => name !== keep).map(name => `${ivm}/prebuilds/${name}`) : []
       const saved = prune(path.join(out, 'node_modules'), [
-        ...['prebuilds', 'src', 'vendor', 'native-example', 'scripts', 'Dockerfile.alpine', 'Dockerfile.debian', 'inspector-example.js', 'binding.gyp'].map(f => `${ivm}/${f}`),
+        ...otherPrebuilds,
+        ...['src', 'vendor', 'native-example', 'scripts', 'Dockerfile.alpine', 'Dockerfile.debian', 'inspector-example.js', 'binding.gyp'].map(f => `${ivm}/${f}`),
         `${ivm}/*.tgz`,
       ])
       console.log(`[card] pruned ${saved} MB`)
@@ -231,11 +241,11 @@ const buildCardServer = () =>
 const bundleNode = () =>
   part('node', ['node'], ROOT, ['config.js'], async () => {
     const out = path.join(BUILD, 'node')
-    const bin = path.join(out, 'bin', 'node')
+    const bin = nodeBin(out)
     fs.mkdirSync(path.dirname(bin), { recursive: true })
     fs.copyFileSync(NODE, bin)
     fs.chmodSync(bin, 0o755)
-    fs.copyFileSync(path.join(path.dirname(path.dirname(NODE)), 'LICENSE'), path.join(out, 'LICENSE'))
+    fs.copyFileSync(path.join(NODE_HOME, 'LICENSE'), path.join(out, 'LICENSE'))
     if (process.platform === 'darwin') {
       await runAsync('node', 'strip', ['-x', bin]).catch(error => console.log(`[node] not stripped: ${error.message}`))
       await runAsync('node', 'codesign', ['--force', '--sign', '-', bin])
@@ -268,7 +278,7 @@ async function main() {
   )
   step('Summary')
   for (const r of results) console.log(`  ${r.name.padEnd(8)} ${r.skipped ? 'unchanged' : `${r.seconds}s`}`)
-  run('du', ['-sh', ...['node', 'sim', 'web', 'blockly', 'blockly-mcp', 'card-server'].map(d => path.join(BUILD, d))])
+  if (!WINDOWS) run('du', ['-sh', ...['node', 'sim', 'web', 'blockly', 'blockly-mcp', 'card-server'].map(d => path.join(BUILD, d))])
   console.log(`\nBuilt into build/ in ${Math.round((Date.now() - started) / 1000)}s.`)
 }
 

@@ -1,18 +1,21 @@
-# Builds the Mac app when a GitHub release is published, for Apple silicon and
-# Intel (each on its own runner: the services' native modules are compiled for
-# the machine that builds them), and attaches the .dmg and .zip files to the
-# release. Run it by hand (Actions → Release → Run workflow) to build without
-# a release; the files are then kept as workflow artifacts.
+# Builds the app when a GitHub release is published: the Mac app for Apple
+# silicon and Intel, and the Windows installer (x64), each on its own runner
+# (the services' native modules are built for the machine that builds them).
+# The .dmg, .zip and .exe files are attached to the release. Run it by hand
+# (Actions → Release → Run workflow) to build without a release; the files
+# are then kept as workflow artifacts.
 #
 # The release's tag (v1.2.3 or 1.2.3) sets the app's version.
 #
-# Signing and notarisation turn on when these repository secrets are set
-# (Settings → Secrets and variables → Actions); without them the builds are
-# unsigned, so macOS asks before opening them and they can't update
-# themselves:
-#   CSC_LINK                      Developer ID Application certificate (.p12, base64)
+# Signing turns on when these repository secrets are set (Settings → Secrets
+# and variables → Actions); without them the builds are unsigned, so macOS
+# asks before opening them (and they can't update themselves) and Windows
+# SmartScreen warns before installing:
+#   CSC_LINK                      Mac: Developer ID Application certificate (.p12, base64)
 #   CSC_KEY_PASSWORD              its password
-#   APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD, APPLE_TEAM_ID   for notarisation
+#   APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD, APPLE_TEAM_ID   Mac: for notarisation
+#   WIN_CSC_LINK                  Windows: code signing certificate (.pfx, base64)
+#   WIN_CSC_KEY_PASSWORD          its password
 
 name: Release
 
@@ -30,29 +33,46 @@ concurrency:
 
 jobs:
   build:
-    name: Build (${{ matrix.arch }})
+    name: Build (${{ matrix.os }} ${{ matrix.arch }})
     strategy:
       fail-fast: false
       matrix:
         include:
-          - arch: arm64
+          - os: mac
+            arch: arm64
             runner: macos-15
-          - arch: x64
+          - os: mac
+            arch: x64
             runner: macos-15-intel
+          - os: win
+            arch: x64
+            runner: windows-2022
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
     env:
       # Built apps check this repository's releases for updates.
       SANDBOX_GITHUB_REPO: ${{ github.repository }}
       SANDBOX_RELEASE: '1'
-      CSC_LINK: ${{ secrets.CSC_LINK }}
-      CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+      # The Mac certificate only on the Mac runners: electron-builder would
+      # otherwise try to sign the Windows installer with it.
+      CSC_LINK: ${{ matrix.os == 'mac' && secrets.CSC_LINK || '' }}
+      CSC_KEY_PASSWORD: ${{ matrix.os == 'mac' && secrets.CSC_KEY_PASSWORD || '' }}
       APPLE_ID: ${{ secrets.APPLE_ID }}
       APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+      WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
       # Without a certificate, don't go looking for one in the keychain.
-      CSC_IDENTITY_AUTO_DISCOVERY: ${{ secrets.CSC_LINK != '' }}
+      CSC_IDENTITY_AUTO_DISCOVERY: ${{ secrets.CSC_LINK != '' || secrets.WIN_CSC_LINK != '' }}
     steps:
+      # node_modules paths run deep (Next.js, Prisma); past Windows' 260 characters, git and npm fail.
+      - name: Allow long paths
+        if: matrix.os == 'win'
+        run: git config --system core.longpaths true
+
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
@@ -80,26 +100,38 @@ jobs:
         run: npm run build -- --clean
 
       - name: Package
-        run: npx electron-builder --mac --${{ matrix.arch }} --config electron-builder.config.cjs --publish never
+        run: npx electron-builder --${{ matrix.os }} --${{ matrix.arch }} --config electron-builder.config.cjs --publish never
 
       - name: Check the app runs its services
         run: |
-          app="release/mac$([ '${{ matrix.arch }}' = arm64 ] && echo -arm64)/Investec Sandbox.app"
-          services="$app/Contents/Resources/services"
-          "$services/node/bin/node" -e "console.log('Node', process.version, process.arch)"
-          (cd "$services/blockly-mcp" && ../node/bin/node investec-blockly-mcp.cjs reference | head -n 3)
+          if [ '${{ matrix.os }}' = win ]; then
+            services="release/win-unpacked/resources/services"
+            node="$services/node/node.exe"
+          else
+            services="release/mac$([ '${{ matrix.arch }}' = arm64 ] && echo -arm64)/Investec Sandbox.app/Contents/Resources/services"
+            node="$services/node/bin/node"
+          fi
+          node="$(cd "$(dirname "$node")" && pwd)/$(basename "$node")"
+          "$node" -e "console.log('Node', process.version, process.platform, process.arch)"
+          (cd "$services/blockly-mcp" && "$node" investec-blockly-mcp.cjs reference | head -n 3)
+          # The card server's sandbox (isolated-vm) is a native addon.
+          (cd "$services/card-server" && "$node" -e "const ivm = require('isolated-vm'); const isolate = new ivm.Isolate(); console.log('isolated-vm', isolate.compileScriptSync('6 * 7').runSync(isolate.createContextSync()))")
 
       - name: Keep the update info apart
+        if: matrix.os == 'mac'
         run: mv release/latest-mac.yml release/latest-mac-${{ matrix.arch }}.yml
 
       - uses: actions/upload-artifact@v4
         with:
-          name: mac-${{ matrix.arch }}
+          name: ${{ matrix.os }}-${{ matrix.arch }}
+          # Mac: .dmg, .zip, latest-mac-<arch>.yml. Windows: the installer and latest.yml.
           path: |
             release/*.dmg
             release/*.zip
+            release/*.exe
             release/*.blockmap
             release/latest-mac-${{ matrix.arch }}.yml
+            release/latest.yml
           if-no-files-found: error
           retention-days: 14
 

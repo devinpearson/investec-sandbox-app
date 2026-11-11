@@ -30,7 +30,9 @@ const { createProxy } = require('./recorder.js')
 const MODE = app.isPackaged ? 'packaged' : process.env.SANDBOX_MODE === 'dev' ? 'dev' : 'build'
 const BUILD = app.isPackaged ? path.join(process.resourcesPath, 'services') : path.join(__dirname, 'build')
 const PACKAGES = path.join(__dirname, 'packages')
-const NODE = MODE === 'dev' ? path.join(__dirname, 'vendor', 'node', 'bin', 'node') : path.join(BUILD, 'node', 'bin', 'node')
+// bin/node, or node.exe at the top of the folder on Windows.
+const nodeBin = home => (process.platform === 'win32' ? path.join(home, 'node.exe') : path.join(home, 'bin', 'node'))
+const NODE = nodeBin(MODE === 'dev' ? path.join(__dirname, 'vendor', 'node') : path.join(BUILD, 'node'))
 
 // The ports in use, chosen by resolvePorts() before anything starts.
 const ports = { ...PORTS }
@@ -131,10 +133,12 @@ let log = () => {}
 // so stopping it also stops anything it started (tsx, next and vite run the
 // real server in a child process).
 function runNode(name, args, { cwd, env = {} }) {
+  // Windows spells it Path; a second PATH key would leave which one wins to chance.
+  const inherited = Object.fromEntries(Object.entries(process.env).filter(([key]) => key.toUpperCase() !== 'PATH'))
   const child = spawn(NODE, args, {
     cwd,
     env: {
-      ...process.env,
+      ...inherited,
       PATH: `${path.dirname(NODE)}${path.delimiter}${process.env.PATH || '/usr/bin:/bin'}`,
       FORCE_COLOR: '0',
       NO_COLOR: '1',
@@ -143,6 +147,8 @@ function runNode(name, args, { cwd, env = {} }) {
     },
     stdio: ['ignore', 'pipe', 'pipe'],
     detached: process.platform !== 'win32',
+    // No console window for each service on Windows.
+    windowsHide: true,
   })
   child.stdout.on('data', d => log(name, d))
   child.stderr.on('data', d => log(name, d))

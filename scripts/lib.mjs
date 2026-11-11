@@ -17,10 +17,16 @@ export const BLOCKLY = path.join(PACKAGES, 'blockly')
 export const CARD = path.join(PACKAGES, 'card-server')
 export const BUILD = path.join(ROOT, 'build')
 
+export const WINDOWS = process.platform === 'win32'
+
+// Where a Node.js folder keeps its executable: bin/node, or node.exe at the
+// top on Windows (as nodejs.org ships them).
+export const nodeBin = home => (WINDOWS ? path.join(home, 'node.exe') : path.join(home, 'bin', 'node'))
+
 // The pinned Node.js, downloaded by setup.mjs.
 export const NODE_HOME = path.join(ROOT, 'vendor', 'node')
-export const NODE = path.join(NODE_HOME, 'bin', 'node')
-const NPM_CLI = path.join(NODE_HOME, 'lib', 'node_modules', 'npm', 'bin', 'npm-cli.js')
+export const NODE = nodeBin(NODE_HOME)
+const NPM_CLI = path.join(NODE_HOME, ...(WINDOWS ? [] : ['lib']), 'node_modules', 'npm', 'bin', 'npm-cli.js')
 
 export const API_URL = `http://localhost:${PORTS.api}`
 export const CARD_URL = `http://localhost:${PORTS.card}`
@@ -28,8 +34,10 @@ export const CARD_URL = `http://localhost:${PORTS.card}`
 // Put the pinned Node first on PATH, so package scripts and native builds
 // (node-gyp) use it rather than whatever Node is installed.
 export function env(extra = {}) {
+  // Windows spells it Path; a second PATH key would leave which one wins to chance.
+  const base = Object.fromEntries(Object.entries(process.env).filter(([key]) => key.toUpperCase() !== 'PATH'))
   return {
-    ...process.env,
+    ...base,
     PATH: `${path.dirname(NODE)}${path.delimiter}${process.env.PATH}`,
     npm_config_update_notifier: 'false',
     npm_config_fund: 'false',

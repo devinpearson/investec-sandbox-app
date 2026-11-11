@@ -1,4 +1,5 @@
-// Packaging (npm run dist / npm run pack). Builds for this Mac's processor.
+// Packaging (npm run dist / npm run pack). Builds for this machine's processor:
+// the Mac app on a Mac, the Windows installer on Windows (--win).
 //
 // Signing and notarisation turn on when their credentials are in the
 // environment, so local builds stay unsigned:
@@ -19,8 +20,8 @@ module.exports = {
   productName: 'Investec Sandbox',
   copyright: 'Copyright © 2026 Devin Pearson',
   directories: { output: 'release', buildResources: 'assets' },
-  // No spaces, and the processor in every name, so the Intel and Apple
-  // silicon builds can sit side by side on a GitHub release.
+  // No spaces, and the processor in every name, so the Intel, Apple silicon
+  // and Windows builds can sit side by side on a GitHub release.
   artifactName: 'Investec-Sandbox-${version}-${arch}.${ext}',
   files: [
     'main.js',
@@ -60,6 +61,20 @@ module.exports = {
     entitlements: 'assets/entitlements.mac.plist',
     entitlementsInherit: 'assets/entitlements.mac.plist',
     notarize: notarizing,
+  },
+  // An installer for the current user (no admin rights needed), which
+  // electron-updater can also update. Signed when WIN_CSC_LINK (a code
+  // signing certificate, .pfx) and WIN_CSC_KEY_PASSWORD are set.
+  win: {
+    icon: 'assets/icon.png',
+    target: [{ target: 'nsis', arch }],
+  },
+  nsis: {
+    oneClick: false,
+    perMachine: false,
+    allowToChangeInstallationDirectory: true,
+    shortcutName: 'Investec Sandbox',
+    artifactName: 'Investec-Sandbox-Setup-${version}-${arch}.${ext}',
   },
   dmg: {
     title: 'Investec Sandbox',

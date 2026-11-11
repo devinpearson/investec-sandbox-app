@@ -7,9 +7,9 @@ import { createHash } from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { BLOCKLY, CARD, NODE, NODE_HOME, NODE_VERSION, ROOT, SIM, WEB, npm, remove, run, step, tool } from './lib.mjs'
+import { BLOCKLY, CARD, NODE, NODE_HOME, NODE_VERSION, ROOT, SIM, WEB, WINDOWS, npm, remove, run, step, tool } from './lib.mjs'
 
-const PLATFORMS = { darwin: 'darwin', linux: 'linux' }
+const PLATFORMS = { darwin: 'darwin', linux: 'linux', win32: 'win' }
 
 export async function ensureNode() {
   if (fs.existsSync(NODE)) {
@@ -17,28 +17,32 @@ export async function ensureNode() {
     if (installed === NODE_VERSION) return
   }
   const platform = PLATFORMS[process.platform]
-  if (!platform) throw new Error(`Building on ${process.platform} isn't supported yet (macOS and Linux are).`)
+  if (!platform) throw new Error(`Building on ${process.platform} isn't supported yet (macOS, Linux and Windows are).`)
   const name = `node-v${NODE_VERSION}-${platform}-${process.arch}`
+  // Windows builds come as a .zip.
+  const file = `${name}${WINDOWS ? '.zip' : '.tar.gz'}`
   const base = `https://nodejs.org/dist/v${NODE_VERSION}`
   step(`Downloading Node.js ${NODE_VERSION} (${process.arch})`)
 
   const sums = await (await fetch(`${base}/SHASUMS256.txt`)).text()
-  const expected = sums.split('\n').find(line => line.endsWith(`  ${name}.tar.gz`))?.split(' ')[0]
-  if (!expected) throw new Error(`No checksum for ${name}.tar.gz`)
-  const response = await fetch(`${base}/${name}.tar.gz`)
+  const expected = sums.split('\n').find(line => line.endsWith(`  ${file}`))?.split(' ')[0]
+  if (!expected) throw new Error(`No checksum for ${file}`)
+  const response = await fetch(`${base}/${file}`)
   if (!response.ok) throw new Error(`Download failed: ${response.status} ${response.statusText}`)
   const archive = Buffer.from(await response.arrayBuffer())
   const actual = createHash('sha256').update(archive).digest('hex')
-  if (actual !== expected) throw new Error(`Checksum mismatch for ${name}.tar.gz`)
+  if (actual !== expected) throw new Error(`Checksum mismatch for ${file}`)
 
   // Unpack into a fresh folder, then move it into place.
   const vendor = path.dirname(NODE_HOME)
   const tmp = path.join(vendor, `.download-${process.pid}`)
   remove(tmp)
   fs.mkdirSync(tmp, { recursive: true })
-  const tarball = path.join(tmp, `${name}.tar.gz`)
-  fs.writeFileSync(tarball, archive)
-  run('tar', ['-xzf', tarball, '-C', tmp])
+  const download = path.join(tmp, file)
+  fs.writeFileSync(download, archive)
+  // Windows' own tar (bsdtar) reads .zip files; Git's GNU tar, often first on PATH, doesn't.
+  const tar = WINDOWS ? path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'tar.exe') : 'tar'
+  run(tar, ['-xf', download, '-C', tmp])
   remove(NODE_HOME)
   fs.renameSync(path.join(tmp, name), NODE_HOME)
   fs.writeFileSync(path.join(NODE_HOME, '.version'), NODE_VERSION)
