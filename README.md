@@ -91,6 +91,10 @@ Builds that support it check for new versions when they start. On a Mac, you can
 - **A service won't start, or a page says it's unavailable:** click the services indicator in the toolbar to restart that service and see its logs. **Services → Restart All** (⇧⌘R) restarts everything.
 - **Your code can't reach the API:** check the address in the welcome sheet, or use **Services → Copy API URL**. If another program had port 3000 when the app started, the sandbox uses the next free port.
 - **Your code gets errors that the app doesn't:** check whether **Faults** are on. The toolbar shows it.
+- **macOS says the app is damaged and should be moved to the Bin:** this affected early downloads for Apple silicon Macs. Download the latest version instead. Or, after dragging the app to Applications, run this in Terminal, which tells macOS you trust the copy you downloaded:
+  ```bash
+  xattr -cr "/Applications/Investec Sandbox.app"
+  ```
 - **Start again with fresh data:** **Data & scenarios → Reset** brings back the starter data.
 
 On a Mac, closing the window keeps the sandbox running so your code can still reach it; quit the app (⌘Q) to stop it.

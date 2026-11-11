@@ -56,7 +56,11 @@ module.exports = {
     category: 'public.app-category.developer-tools',
     icon: 'assets/icon.png',
     target: [{ target: 'dmg', arch }, ...(release ? [{ target: 'zip', arch }] : [])],
-    identity: signing ? undefined : null,
+    // Without a certificate, sign ad hoc ('-'). An Apple silicon Mac won't run
+    // a downloaded app with no valid signature at all: macOS calls it
+    // "damaged" and offers no way to open it. Ad hoc, it gets the usual
+    // unidentified developer prompt (Open Anyway) instead.
+    identity: signing ? undefined : '-',
     hardenedRuntime: signing,
     entitlements: 'assets/entitlements.mac.plist',
     entitlementsInherit: 'assets/entitlements.mac.plist',

@@ -27,7 +27,7 @@ const TSC = 'typescript/bin/tsc'
 const CLEAN = process.argv.includes('--clean')
 const STAMPS = path.join(BUILD, '.stamps')
 // Bump to invalidate every stamp when this script changes what it produces.
-const BUILD_FORMAT = 2
+const BUILD_FORMAT = 3
 
 // ---------------------------------------------------------------------------
 // Change detection: a part is rebuilt when any of its inputs changed.
@@ -117,7 +117,10 @@ function prune(nodeModules, extra = []) {
   const walk = (dir, depth) => {
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
       const full = path.join(dir, entry.name)
-      if (entry.isDirectory()) {
+      // A link to something pruned (node_modules/.bin/tsc once typescript
+      // goes) breaks code signing, which reads every file in the app.
+      if (entry.isSymbolicLink() && !fs.existsSync(full)) remove(full)
+      else if (entry.isDirectory()) {
         // Test/doc folders only at a package's top level, where they're never runtime code.
         if (depth === 0 && JUNK_DIRS.has(entry.name)) drop(full)
         else walk(full, entry.name === 'node_modules' || entry.name.startsWith('@') ? -1 : depth + 1)
