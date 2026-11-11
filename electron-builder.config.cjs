@@ -19,6 +19,9 @@ module.exports = {
   productName: 'Investec Sandbox',
   copyright: 'Copyright © 2026 Devin Pearson',
   directories: { output: 'release', buildResources: 'assets' },
+  // No spaces, and the processor in every name, so the Intel and Apple
+  // silicon builds can sit side by side on a GitHub release.
+  artifactName: 'Investec-Sandbox-${version}-${arch}.${ext}',
   files: [
     'main.js',
     'services.js',

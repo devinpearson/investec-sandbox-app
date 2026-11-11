@@ -58,7 +58,7 @@ Runs the app on `build/`, the way the installed app runs.
 npm run dist
 ```
 
-Builds everything, then writes `release/Investec Sandbox-<version>.dmg` (about 180 MB, LZFSE-compressed) and `release/mac/Investec Sandbox.app` (about 440 MB, most of it Electron and Node). Packaging takes about 20 seconds. Open the `.dmg` and drag the app to Applications. `npm run pack` builds just the `.app`, and `npm run release` also makes the `.zip` and block map that auto-update uses. Electron's language packs are left out except English. The packaging settings are in [electron-builder.config.cjs](electron-builder.config.cjs).
+Builds everything, then writes `release/Investec-Sandbox-<version>-<arch>.dmg` (about 180 MB, LZFSE-compressed) and `release/mac/Investec Sandbox.app` (about 440 MB, most of it Electron and Node). Packaging takes about 20 seconds. Open the `.dmg` and drag the app to Applications. `npm run pack` builds just the `.app`, and `npm run release` also makes the `.zip` and block map that auto-update uses. Electron's language packs are left out except English. The packaging settings are in [electron-builder.config.cjs](electron-builder.config.cjs).
 
 It's built for the Mac's own processor: Node.js and the native modules are installed for it, so build on Apple silicon for an arm64 app.
 
@@ -66,6 +66,11 @@ It's built for the Mac's own processor: Node.js and the native modules are insta
 - Signing: `CSC_LINK` and `CSC_KEY_PASSWORD` (or `CSC_NAME`) for a Developer ID Application certificate. The hardened runtime's exceptions are in `assets/entitlements.mac.plist`.
 - Notarisation: `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD` and `APPLE_TEAM_ID` (or an App Store Connect API key).
 - Updates: set `SANDBOX_GITHUB_REPO=owner/repo` and run `npm run release` to publish to that repository's GitHub Releases. Signed copies built that way check for updates on launch and from **Investec Sandbox → Check for Updates…**.
+
+### Releases on GitHub
+Publishing a release on GitHub runs [.github/workflows/release.yml](.github/workflows/release.yml). It builds the app on an Apple silicon and an Intel runner and attaches both `.dmg` files (plus the `.zip` files, block maps and a combined `latest-mac.yml` for auto-update) to the release. The release's tag sets the version: `v1.2.0` makes 1.2.0. To build without a release, run the workflow from the Actions tab; the files are kept as workflow artifacts for 14 days.
+
+Builds are signed and notarised when the repository has the secrets `CSC_LINK` (the certificate as base64), `CSC_KEY_PASSWORD`, `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD` and `APPLE_TEAM_ID`. Without them they're unsigned and don't update themselves.
 
 ### The app's data
 The installed app (and `npm start`) keeps the sandbox's data in `~/Library/Application Support/Investec Sandbox/sandbox.db`, created from the starter data on first launch. When a new version adds Prisma migrations, the app applies them on launch, after copying the database to `sandbox.db.backup`. **Services → Show Sandbox Data in Finder** opens the folder. To move data between the app and another copy of the sandbox, use **Export** and **Import** on the dashboard.
