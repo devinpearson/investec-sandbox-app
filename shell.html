@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'" />
+  <title>Investec Sandbox</title>
+  <link rel="stylesheet" href="shell.css" />
+</head>
+<body>
+  <aside id="sidebar" aria-label="Sections">
+    <div class="sidebar-top drag"></div>
+    <div class="brand">
+      <img src="assets/icon.png" alt="" width="28" height="28" />
+      <div>
+        <div class="brand-name">Investec Sandbox</div>
+        <div class="brand-sub">Programmable banking</div>
+      </div>
+    </div>
+    <nav id="sections" aria-label="Sections"></nav>
+    <div id="sidebar-resize" role="separator" aria-orientation="vertical" aria-label="Resize sidebar" title="Drag to resize"></div>
+  </aside>
+
+  <main id="content">
+    <header id="toolbar" class="drag">
+      <div class="toolbar-nav no-drag">
+        <button id="sidebar-toggle" class="icon-btn" title="Toggle sidebar (⌃⌘S)" aria-label="Toggle sidebar"></button>
+        <button id="back" class="icon-btn" title="Back (⌘[)" aria-label="Back"></button>
+        <button id="forward" class="icon-btn" title="Forward (⌘])" aria-label="Forward"></button>
+      </div>
+      <div class="toolbar-title">
+        <div id="title"></div>
+        <div id="subtitle"></div>
+      </div>
+      <div class="toolbar-actions no-drag" id="actions"></div>
+      <div class="toolbar-end no-drag">
+        <button id="status" class="status-pill" type="button" aria-haspopup="menu"></button>
+        <button id="palette" class="icon-btn" title="Command palette (⌘K)" aria-label="Command palette"></button>
+      </div>
+    </header>
+    <div id="stage"></div>
+  </main>
+
+  <script src="shell-api.js"></script>
+  <script src="shell-dev.js"></script>
+  <script src="shell.js"></script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f9fafb;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #111827;
+    --foreground: #ededed;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* Forms in the desktop app's sheets (components/Disclosure.tsx). Their own
+   layout follows the window's width (up to seven fields in a row), which
+   is far wider than a sheet; here they get two roomy columns, with checkboxes,
+   wide fields and the submit button on rows of their own. */
+.sheet-body .grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem 0.875rem;
+  align-items: start;
+}
+.sheet-body .grid > label,
+.sheet-body .grid > button,
+.sheet-body .grid > [class*='col-span'] {
+  grid-column: 1 / -1;
+}
+.sheet-body .grid > label {
+  padding-bottom: 0;
+}
+.sheet-body .grid > button,
+.sheet-body [data-sheet-submit] {
+  justify-self: end;
+  min-width: 7.5rem;
+  margin-top: 0.25rem;
+  /* The sheet's default button: the accent colour, whatever the page used. */
+  background-color: var(--color-blue-600);
+  color: #fff;
+}
+.sheet-body .grid > button:hover:not(:disabled),
+.sheet-body [data-sheet-submit]:hover:not(:disabled) {
+  background-color: var(--color-blue-500);
+}
+.sheet-body > p:first-child {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}

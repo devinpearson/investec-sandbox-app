@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'" />
+  <title>Settings</title>
+  <link rel="stylesheet" href="ui.css" />
+  <link rel="stylesheet" href="preferences.css" />
+</head>
+<body>
+  <main>
+    <section>
+      <h2>General</h2>
+      <div class="group">
+        <label class="row">
+          <span class="label">Open at login<div class="hint">Start Investec Sandbox when you log in to your Mac.</div></span>
+          <input id="openAtLogin" class="switch" type="checkbox" />
+        </label>
+        <label class="row">
+          <span class="label">Show in the menu bar<div class="hint">Service status and quick actions, also while the window is closed.</div></span>
+          <input id="menuBar" class="switch" type="checkbox" />
+        </label>
+      </div>
+    </section>
+
+    <section>
+      <h2>Ports</h2>
+      <div class="group">
+        <form class="row ports" id="ports" novalidate>
+          <label><span>API</span><input id="port-api" type="number" min="1024" max="65535" step="1" required /></label>
+          <label><span>Dashboard</span><input id="port-web" type="number" min="1024" max="65535" step="1" required /></label>
+          <label><span>Card editor</span><input id="port-editor" type="number" min="1024" max="65535" step="1" required /></label>
+          <label><span>Card server</span><input id="port-card" type="number" min="1024" max="65535" step="1" required /></label>
+          <label><span>MCP server</span><input id="port-mcp" type="number" min="1024" max="65535" step="1" required /></label>
+        </form>
+        <div class="row">
+          <span class="label hint" id="ports-note" role="status"></span>
+          <button id="reset" class="btn" type="button">Use Defaults</button>
+          <button id="apply" class="btn primary" type="button" disabled>Restart Services</button>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Data</h2>
+      <div class="group">
+        <div class="row">
+          <span class="label">Sandbox data<div class="hint mono" id="dataLocation"></div></span>
+          <button id="showData" class="btn" type="button">Show in Finder</button>
+        </div>
+        <div class="row">
+          <span class="label">Welcome sheet<div class="hint">The API address, credentials and a first card swipe.</div></span>
+          <button id="welcome" class="btn" type="button">Show Again</button>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="preferences.js"></script>
+</body>
+</html>

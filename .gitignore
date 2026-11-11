@@ -1,0 +1,12 @@
+node_modules/
+release/
+build/
+vendor/
+.DS_Store
+packages/*/node_modules/
+packages/sim/web/node_modules/
+packages/sim/dist/
+packages/sim/web/.next*/
+packages/sim/prisma/*.db*
+packages/blockly/dist/
+packages/card-server/dist/

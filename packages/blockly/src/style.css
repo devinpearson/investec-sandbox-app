@@ -1,0 +1,88 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* The accent colour (Tailwind's indigo). The desktop app overrides these
+   with the system accent colour. */
+:root {
+  --accent-50: 238 242 255;
+  --accent-100: 224 231 255;
+  --accent-200: 199 210 254;
+  --accent-300: 165 180 252;
+  --accent-400: 129 140 248;
+  --accent-500: 99 102 241;
+  --accent-600: 79 70 229;
+  --accent-700: 67 56 202;
+  --accent-800: 55 48 163;
+  --accent-900: 49 46 129;
+  --accent-950: 30 27 75;
+}
+
+/* Blockly hides some SVG elements with a display attribute. */
+svg[display="none"] {
+  display: none;
+}
+
+/* Syntax colours for highlight.js output, in light and dark. */
+.hljs {
+  color: #1f2937;
+}
+.hljs-keyword,
+.hljs-literal {
+  color: #7c3aed;
+}
+.hljs-string {
+  color: #047857;
+}
+.hljs-number {
+  color: #b45309;
+}
+.hljs-comment {
+  color: #6b7280;
+  font-style: italic;
+}
+.hljs-title,
+.hljs-title.function_ {
+  color: #1d4ed8;
+}
+.hljs-built_in,
+.hljs-property,
+.hljs-attr {
+  color: #be185d;
+}
+.hljs-params,
+.hljs-variable {
+  color: #374151;
+}
+
+@media (prefers-color-scheme: dark) {
+  .hljs {
+    color: #e5e7eb;
+  }
+  .hljs-keyword,
+  .hljs-literal {
+    color: #c4b5fd;
+  }
+  .hljs-string {
+    color: #6ee7b7;
+  }
+  .hljs-number {
+    color: #fcd34d;
+  }
+  .hljs-comment {
+    color: #9ca3af;
+  }
+  .hljs-title,
+  .hljs-title.function_ {
+    color: #93c5fd;
+  }
+  .hljs-built_in,
+  .hljs-property,
+  .hljs-attr {
+    color: #f9a8d4;
+  }
+  .hljs-params,
+  .hljs-variable {
+    color: #d1d5db;
+  }
+}

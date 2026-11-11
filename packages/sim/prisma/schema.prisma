@@ -1,0 +1,177 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Profile {
+    profileId String @id
+    profileName String
+}
+
+model Account {
+    accountId String @id
+    accountNumber String
+    accountName String
+    referenceName String
+    productName String
+    kycCompliant Boolean @default(true)
+    overdraftLimit Decimal @default(0)
+    profileId String
+    profileName String
+    transactions Transaction[]
+    schedules Schedule[]
+}
+
+model Transaction {
+    transactionId Int @id @default(autoincrement())
+    accountId String
+    type String
+    transactionType String
+    status String
+    description String
+    cardNumber String
+    postedOrder Decimal
+    postingDate String
+    valueDate String
+    actionDate String
+    transactionDate String
+    amount Decimal
+    runningBalance Decimal
+    account Account @relation(fields: [accountId], references: [accountId], onDelete: Cascade)
+
+    @@index([accountId])
+}
+
+model Country { 
+    code String @id
+    name String
+}
+
+model Currency { 
+    code String @id
+    name String
+}
+
+model Merchant { 
+    code String @id
+    name String
+}
+
+model Beneficiary {
+    beneficiaryId String @id
+    accountNumber String
+    code String
+    bank String
+    beneficiaryName String
+    lastPaymentAmount String
+    lastPaymentDate String
+    cellNo String?
+    emailAddress String?
+    name String
+    referenceAccountNumber String
+    referenceName String
+    categoryId String
+    profileId String
+}
+
+model Setting {
+    name String @id
+    value String
+}
+
+model Card {
+    cardKey String @id
+    cardNumber String
+    isProgrammable Boolean
+    status String
+    cardTypeCode String
+    accountNumber String
+    accountId String
+    publishedCode String
+    savedCode String
+    envs String
+    // When the card's environment variables were first set and last changed.
+    envsCreatedAt DateTime @default(now())
+    envsUpdatedAt DateTime @default(now())
+    executions CardExecution[]
+
+    @@index([accountId])
+}
+
+model CardCode {
+    codeId String @id
+    code String
+    createdAt DateTime
+    updatedAt DateTime
+    publishedAt DateTime?
+}
+
+model CardExecution {
+    executionId String @id
+    cardKey String
+    rootCodeFunctionId String
+    sandbox Boolean
+    type String
+    authorizationApproved Boolean?
+    smsCount Int
+    emailCount Int
+    pushNotificationCount Int
+    createdAt DateTime
+    startedAt DateTime
+    completedAt DateTime
+    updatedAt DateTime?
+    card Card @relation(fields: [cardKey], references: [cardKey], onDelete: Cascade)
+    logs CardExecutionLog[]
+
+    @@index([cardKey])
+}
+
+model CardExecutionLog {
+    logId String @id
+    executionId String
+    createdAt DateTime
+    level String
+    content String
+    execution CardExecution @relation(fields: [executionId], references: [executionId], onDelete: Cascade)
+
+    @@index([executionId])
+}
+// How many rand one unit of a currency buys, for converting foreign card
+// swipes. Illustrative sandbox rates, not live ones; change them with
+// PUT /exchange-rates/:currencyCode.
+model ExchangeRate {
+    currencyCode String @id
+    zarPerUnit Decimal
+    updatedAt DateTime @updatedAt
+}
+
+// A recurring transaction on an account: a fixed amount (salary, debit
+// order, fee) or monthly interest at an annual rate. Runs when the sandbox
+// clock reaches nextRunDate (src/schedules.ts).
+model Schedule {
+    scheduleId String @id
+    accountId String
+    description String
+    // fixed | interest
+    kind String
+    // DEBIT | CREDIT for fixed amounts; interest follows the balance's sign.
+    type String
+    transactionType String
+    amount Decimal?
+    annualRatePercent Decimal?
+    // monthly (on dayOfMonth, clamped to the month's last day) | weekly (on dayOfWeek, 0 = Sunday)
+    frequency String
+    dayOfMonth Int?
+    dayOfWeek Int?
+    // YYYY-MM-DD
+    nextRunDate String
+    active Boolean @default(true)
+    createdAt DateTime @default(now())
+    account Account @relation(fields: [accountId], references: [accountId], onDelete: Cascade)
+
+    @@index([accountId])
+}

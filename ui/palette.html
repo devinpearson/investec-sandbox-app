@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'" />
+  <title>Command Palette</title>
+  <link rel="stylesheet" href="ui.css" />
+  <link rel="stylesheet" href="palette.css" />
+</head>
+<body>
+  <div class="panel">
+    <input id="query" type="text" placeholder="Go to a section, run an action or load a scenario…" autocomplete="off" spellcheck="false" aria-label="Search commands" aria-controls="results" />
+    <ul id="results" role="listbox" aria-label="Commands"></ul>
+    <p id="empty" class="muted" hidden>No matches.</p>
+  </div>
+  <script src="palette.js"></script>
+</body>
+</html>

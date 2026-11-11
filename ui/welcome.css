@@ -1,0 +1,13 @@
+main { padding: 26px 30px 20px; display: flex; flex-direction: column; gap: 20px; height: 100vh; }
+header { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; }
+header img { margin: -8px 0 2px; }
+header p { max-width: 440px; }
+.detail { display: flex; align-items: center; gap: 10px; }
+.detail .name { width: 92px; flex: none; color: var(--muted); }
+.detail .value { flex: 1; min-width: 0; font: 12px var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; user-select: text; }
+.hint { font-size: 11px; color: var(--muted); margin-top: 6px; }
+.steps { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.step { text-align: left; display: flex; flex-direction: column; gap: 3px; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--card); }
+.step:hover { background: color-mix(in srgb, var(--card) 92%, var(--text)); }
+.step-title { font-weight: 600; }
+footer { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }

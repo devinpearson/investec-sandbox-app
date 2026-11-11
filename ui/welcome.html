@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self'; style-src 'self'; script-src 'self'" />
+  <title>Welcome to Investec Sandbox</title>
+  <link rel="stylesheet" href="ui.css" />
+  <link rel="stylesheet" href="welcome.css" />
+</head>
+<body>
+  <main>
+    <header>
+      <img src="../assets/icon.png" alt="" width="72" height="72" />
+      <h1>Welcome to Investec Sandbox</h1>
+      <p class="muted">A local copy of Investec’s programmable banking APIs, with accounts, cards and card code to play with. Nothing here touches a real bank account.</p>
+    </header>
+
+    <section>
+      <h2>Connect your app or Postman</h2>
+      <div class="group" id="details"></div>
+      <p class="hint" id="auth-note"></p>
+    </section>
+
+    <section class="steps">
+      <button id="swipe" class="step" type="button">
+        <span class="step-title">Try a card swipe</span>
+        <span class="muted">Make a purchase on the seeded card and watch the balance change.</span>
+      </button>
+      <button id="postman" class="step" type="button">
+        <span class="step-title">Open the Postman collection</span>
+        <span class="muted">Ready-made requests for every endpoint, in your browser.</span>
+      </button>
+    </section>
+
+    <footer>
+      <span class="muted">Open this again from Help → Welcome to Investec Sandbox.</span>
+      <button id="close" class="btn primary" type="button">Get Started</button>
+    </footer>
+  </main>
+  <script src="welcome.js"></script>
+</body>
+</html>

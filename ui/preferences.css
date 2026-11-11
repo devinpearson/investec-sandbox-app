@@ -1,0 +1,7 @@
+main { padding: 20px 22px; display: flex; flex-direction: column; gap: 18px; }
+.ports { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+.ports label { display: flex; flex-direction: column; gap: 4px; font-size: 11px; color: var(--muted); }
+.ports input { width: 100%; }
+#dataLocation { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 360px; user-select: text; }
+.ports input.invalid { border-color: var(--danger); outline-color: color-mix(in srgb, var(--danger) 45%, transparent); }
+#ports-note.error { color: var(--danger); }

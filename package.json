@@ -1,0 +1,27 @@
+{
+  "name": "investec-sandbox-electron",
+  "version": "1.0.0",
+  "description": "Desktop app for the Investec programmable banking sandbox, card code editor and card server",
+  "main": "main.js",
+  "scripts": {
+    "postinstall": "node scripts/setup.mjs",
+    "dev": "SANDBOX_MODE=dev electron .",
+    "build": "node scripts/build.mjs",
+    "start": "electron .",
+    "pack": "npm run build && electron-builder --mac --dir --config electron-builder.config.cjs",
+    "dist": "npm run build && electron-builder --mac --config electron-builder.config.cjs",
+    "release": "npm run build && SANDBOX_RELEASE=1 electron-builder --mac --config electron-builder.config.cjs --publish always",
+    "build:clean": "node scripts/build.mjs --clean"
+  },
+  "author": "Devin Pearson",
+  "license": "MIT",
+  "type": "commonjs",
+  "devDependencies": {
+    "electron": "^45.2.3",
+    "electron-builder": "^26.18.0"
+  },
+  "productName": "Investec Sandbox",
+  "dependencies": {
+    "electron-updater": "^6.8.11"
+  }
+}

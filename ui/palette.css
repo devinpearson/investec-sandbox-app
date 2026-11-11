@@ -1,0 +1,12 @@
+html, body { background: transparent; height: 100%; overflow: hidden; }
+.panel { height: 100%; display: flex; flex-direction: column; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; background: color-mix(in srgb, var(--bg) 70%, transparent); }
+#query { all: unset; font: 18px var(--font); color: var(--text); padding: 16px 18px; border-bottom: 1px solid var(--border); user-select: text; cursor: text; }
+#query::placeholder { color: var(--muted); }
+#results { list-style: none; margin: 0; padding: 6px; overflow-y: auto; flex: 1; }
+.group-label { font-size: 11px; font-weight: 600; color: var(--muted); padding: 8px 10px 3px; }
+.item { display: flex; align-items: baseline; gap: 10px; padding: 7px 10px; border-radius: 7px; }
+.item .title { white-space: nowrap; }
+.item .subtitle { color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item[aria-selected=true] { background: var(--accent); color: #fff; }
+.item[aria-selected=true] .subtitle { color: rgb(255 255 255 / 0.75); }
+#empty { padding: 18px; }
