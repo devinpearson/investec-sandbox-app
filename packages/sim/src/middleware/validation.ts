@@ -42,8 +42,16 @@ export function validateRequest(schemas: RequestSchemas): RequestHandler<any> {
       if (result.success) {
         validated[location] = result.data
       } else {
+        // Zod 4 goes on to run a field's checks (e.g. .min(1)) after its type
+        // was wrong; zod 3 stopped at the type error. Report only that one.
+        const wrongType = new Set(
+          result.error.issues.filter(issue => issue.code === 'invalid_type').map(issue => issue.path.join('.')),
+        )
+        const reported = result.error.issues.filter(
+          issue => issue.code === 'invalid_type' || !wrongType.has(issue.path.join('.')),
+        )
         issues.push(
-          ...result.error.issues.map(issue => ({
+          ...reported.map(issue => ({
             location,
             path: issue.path.join('.') || location,
             message: issue.message,

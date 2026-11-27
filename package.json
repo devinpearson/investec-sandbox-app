@@ -23,5 +23,8 @@
   "productName": "Investec Sandbox",
   "dependencies": {
     "electron-updater": "^6.8.11"
+  },
+  "overrides": {
+    "minimatch@>=7.0.0 <11.0.1": "^11.0.1"
   }
 }
