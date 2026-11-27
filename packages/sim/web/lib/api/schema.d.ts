@@ -312,9 +312,12 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
+                    /** @description Earliest posting date. Defaults to 180 days ago. */
                     fromDate?: string;
+                    /** @description Latest posting date. Defaults to today. */
                     toDate?: string;
                     transactionType?: string;
+                    /** @description Include pending card holds (listed first). */
                     includePending?: "true" | "false";
                 };
                 header?: never;
@@ -392,6 +395,7 @@ export interface paths {
         post: {
             parameters: {
                 query?: {
+                    /** @description Allow a non-card transaction to be created as PENDING. */
                     allowNonCardPending?: "true" | "false";
                 };
                 header?: never;
@@ -1454,7 +1458,9 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
+                    /** @description Earliest statement date. Defaults to three months ago. */
                     fromDate?: string;
+                    /** @description Latest statement date. Defaults to today. */
                     toDate?: string;
                 };
                 header?: never;
@@ -3887,8 +3893,11 @@ export interface paths {
                 query: {
                     client_id: string;
                     redirect_uri: string;
+                    /** @description Space-separated: accounts balances transactions transfers beneficiarypayments statements cards. Omit for all. */
                     scope?: string;
+                    /** @description Echoed back on the redirect. */
                     state?: string;
+                    /** @description Only code is supported; anything else is a 400. */
                     response_type?: "code";
                 };
                 header?: never;
@@ -3952,6 +3961,7 @@ export interface paths {
         get: {
             parameters: {
                 query: {
+                    /** @description The sign-in request handle */
                     qsp: string;
                 };
                 header?: never;
@@ -4027,7 +4037,9 @@ export interface paths {
         get: {
             parameters: {
                 query: {
+                    /** @description The sign-in request handle */
                     qsp: string;
+                    /** @description JSON array of consented account numbers; omit for all. */
                     selectedAccounts?: string;
                 };
                 header?: never;
@@ -4091,6 +4103,7 @@ export interface paths {
         get: {
             parameters: {
                 query: {
+                    /** @description The sign-in request handle */
                     qsp: string;
                 };
                 header?: never;
@@ -4841,6 +4854,18 @@ export interface components {
                 error: null;
             };
         };
+        /** @description transaction is the pending hold (or posted purchase) on the card's account; null when declined or the card has no account. */
+        SwipeResult: {
+            /** @description Whether the purchase was approved. */
+            result: boolean;
+            /**
+             * @description Why the bank declined it, before any card code ran.
+             * @enum {string}
+             */
+            reason?: "insufficient_funds" | "card_not_active";
+            transaction: components["schemas"]["StoredTransaction"] | null;
+            exchange: components["schemas"]["Exchange"] | null;
+        };
         Exchange: {
             /** @example USD */
             currencyCode: string;
@@ -4856,18 +4881,6 @@ export interface components {
              * @example 220
              */
             zarAmount: number;
-        };
-        /** @description transaction is the pending hold (or posted purchase) on the card's account; null when declined or the card has no account. */
-        SwipeResult: {
-            /** @description Whether the purchase was approved. */
-            result: boolean;
-            /**
-             * @description Why the bank declined it, before any card code ran.
-             * @enum {string}
-             */
-            reason?: "insufficient_funds" | "card_not_active";
-            transaction: components["schemas"]["StoredTransaction"] | null;
-            exchange: components["schemas"]["Exchange"] | null;
         };
         Execution: {
             executionId: string;

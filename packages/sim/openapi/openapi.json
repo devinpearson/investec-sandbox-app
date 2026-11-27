@@ -170,8 +170,8 @@
             "anyOf": [
               {
                 "type": "string",
-                "description": "Decimal amount",
-                "example": "125.50"
+                "example": "125.50",
+                "description": "Decimal amount"
               },
               {
                 "type": "number"
@@ -194,15 +194,15 @@
           },
           "amount": {
             "type": "string",
-            "description": "Decimal amount",
-            "example": "125.50"
+            "example": "125.50",
+            "description": "Decimal amount"
           },
           "runningBalance": {
             "anyOf": [
               {
                 "type": "string",
-                "description": "Decimal amount",
-                "example": "125.50"
+                "example": "125.50",
+                "description": "Decimal amount"
               },
               {
                 "type": "number"
@@ -282,8 +282,8 @@
           },
           "amount": {
             "type": "string",
-            "description": "Decimal amount",
-            "example": "125.50"
+            "example": "125.50",
+            "description": "Decimal amount"
           }
         },
         "required": [
@@ -671,6 +671,49 @@
           "result"
         ]
       },
+      "SwipeResult": {
+        "type": "object",
+        "properties": {
+          "result": {
+            "type": "boolean",
+            "description": "Whether the purchase was approved."
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "insufficient_funds",
+              "card_not_active"
+            ],
+            "description": "Why the bank declined it, before any card code ran."
+          },
+          "transaction": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StoredTransaction"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "exchange": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Exchange"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "result",
+          "transaction",
+          "exchange"
+        ],
+        "description": "transaction is the pending hold (or posted purchase) on the card's account; null when declined or the card has no account."
+      },
       "Exchange": {
         "type": "object",
         "properties": {
@@ -699,55 +742,6 @@
           "zarPerUnit",
           "zarAmount"
         ]
-      },
-      "SwipeResult": {
-        "type": "object",
-        "properties": {
-          "result": {
-            "type": "boolean",
-            "description": "Whether the purchase was approved."
-          },
-          "reason": {
-            "type": "string",
-            "enum": [
-              "insufficient_funds",
-              "card_not_active"
-            ],
-            "description": "Why the bank declined it, before any card code ran."
-          },
-          "transaction": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/StoredTransaction"
-              },
-              {
-                "type": "null"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "exchange": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Exchange"
-              },
-              {
-                "type": "null"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "required": [
-          "result",
-          "transaction",
-          "exchange"
-        ],
-        "description": "transaction is the pending hold (or posted purchase) on the card's account; null when declined or the card has no account."
       },
       "Execution": {
         "type": "object",
@@ -930,9 +924,6 @@
               {
                 "type": "string",
                 "example": "2026-11-09T10:00:00.000Z"
-              },
-              {
-                "type": "null"
               },
               {
                 "type": "null"
@@ -2285,10 +2276,11 @@
             "schema": {
               "type": "string",
               "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
-              "description": "Earliest posting date. Defaults to 180 days ago.",
-              "example": "2026-01-31"
+              "example": "2026-01-31",
+              "description": "Earliest posting date. Defaults to 180 days ago."
             },
             "required": false,
+            "description": "Earliest posting date. Defaults to 180 days ago.",
             "name": "fromDate",
             "in": "query"
           },
@@ -2296,10 +2288,11 @@
             "schema": {
               "type": "string",
               "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
-              "description": "Latest posting date. Defaults to today.",
-              "example": "2026-01-31"
+              "example": "2026-01-31",
+              "description": "Latest posting date. Defaults to today."
             },
             "required": false,
+            "description": "Latest posting date. Defaults to today.",
             "name": "toDate",
             "in": "query"
           },
@@ -2323,6 +2316,7 @@
               "description": "Include pending card holds (listed first)."
             },
             "required": false,
+            "description": "Include pending card holds (listed first).",
             "name": "includePending",
             "in": "query"
           }
@@ -2456,6 +2450,7 @@
               "description": "Allow a non-card transaction to be created as PENDING."
             },
             "required": false,
+            "description": "Allow a non-card transaction to be created as PENDING.",
             "name": "allowNonCardPending",
             "in": "query"
           }
@@ -3965,10 +3960,11 @@
             "schema": {
               "type": "string",
               "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
-              "description": "Earliest statement date. Defaults to three months ago.",
-              "example": "2026-01-31"
+              "example": "2026-01-31",
+              "description": "Earliest statement date. Defaults to three months ago."
             },
             "required": false,
+            "description": "Earliest statement date. Defaults to three months ago.",
             "name": "fromDate",
             "in": "query"
           },
@@ -3976,10 +3972,11 @@
             "schema": {
               "type": "string",
               "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
-              "description": "Latest statement date. Defaults to today.",
-              "example": "2026-01-31"
+              "example": "2026-01-31",
+              "description": "Latest statement date. Defaults to today."
             },
             "required": false,
+            "description": "Latest statement date. Defaults to today.",
             "name": "toDate",
             "in": "query"
           }
@@ -6856,8 +6853,8 @@
                   },
                   "amount": {
                     "type": "number",
-                    "description": "Required for fixed amounts.",
-                    "example": 125.5
+                    "example": 125.5,
+                    "description": "Required for fixed amounts."
                   },
                   "annualRatePercent": {
                     "type": "number",
@@ -6888,8 +6885,8 @@
                   "startDate": {
                     "type": "string",
                     "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
-                    "description": "First run on or after this date. Defaults to the sandbox date.",
-                    "example": "2026-01-31"
+                    "example": "2026-01-31",
+                    "description": "First run on or after this date. Defaults to the sandbox date."
                   }
                 },
                 "required": [
@@ -7463,6 +7460,7 @@
               "description": "Space-separated: accounts balances transactions transfers beneficiarypayments statements cards. Omit for all."
             },
             "required": false,
+            "description": "Space-separated: accounts balances transactions transfers beneficiarypayments statements cards. Omit for all.",
             "name": "scope",
             "in": "query"
           },
@@ -7472,6 +7470,7 @@
               "description": "Echoed back on the redirect."
             },
             "required": false,
+            "description": "Echoed back on the redirect.",
             "name": "state",
             "in": "query"
           },
@@ -7484,6 +7483,7 @@
               "description": "Only code is supported; anything else is a 400."
             },
             "required": false,
+            "description": "Only code is supported; anything else is a 400.",
             "name": "response_type",
             "in": "query"
           }
@@ -7540,6 +7540,7 @@
               "description": "The sign-in request handle"
             },
             "required": true,
+            "description": "The sign-in request handle",
             "name": "qsp",
             "in": "query"
           }
@@ -7636,6 +7637,7 @@
               "description": "The sign-in request handle"
             },
             "required": true,
+            "description": "The sign-in request handle",
             "name": "qsp",
             "in": "query"
           },
@@ -7645,6 +7647,7 @@
               "description": "JSON array of consented account numbers; omit for all."
             },
             "required": false,
+            "description": "JSON array of consented account numbers; omit for all.",
             "name": "selectedAccounts",
             "in": "query"
           }
@@ -7700,6 +7703,7 @@
               "description": "The sign-in request handle"
             },
             "required": true,
+            "description": "The sign-in request handle",
             "name": "qsp",
             "in": "query"
           }
